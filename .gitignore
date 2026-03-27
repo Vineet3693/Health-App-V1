@@ -1,54 +1,42 @@
 ```
 # Dependencies
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Build outputs
 dist/
 build/
-target/
-
-# TypeScript
-*.tsbuildinfo
-*.js.map
-
-# Logs
-*.log
+coverage/
+.nyc_output/
+.eslintcache
 
 # Environment variables
 .env
 .env.local
-*.env.*
+.env.*
+!.env.example
 
-# IDE
+# IDE specific
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# OS
+# OS generated files
 .DS_Store
 Thumbs.db
 
-# Cache
-.nyc_output/
-coverage/
-.npm/
-.yarn/
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Temporary files
 *.tmp
-*.swp
-*.swo
-
-# Python (if any Python files exist in the project)
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-venv/
-.venv/
-.env
-
-# Test coverage
-htmlcov/
-.coverage
+*.temp
+.DS_Store
 ```

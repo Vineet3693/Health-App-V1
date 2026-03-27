@@ -1,23 +1,38 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
+import { setupAuthRoutes } from './auth.routes';
+import { AuthController } from '../controllers/auth.controller';
+import { AuthService } from '../../services/auth.service';
+import { getRepository } from 'typeorm';
+import { User } from '../../models/user.model';
+import { authMiddleware } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-// Import route modules
-import authRoutes from './auth.routes';
-import userRoutes from './user.routes';
-import healthRoutes from './health.routes';
-import nutritionRoutes from './nutrition.routes';
-import fitnessRoutes from './fitness.routes';
-import telehealthRoutes from './telehealth.routes';
-import analyticsRoutes from './analytics.routes';
+// Initialize controllers and services
+const userRepository = getRepository(User);
+const authService = new AuthService(userRepository);
+const authController = new AuthController(authService);
 
-// Mount routes
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/health', healthRoutes);
-router.use('/nutrition', nutritionRoutes);
-router.use('/fitness', fitnessRoutes);
-router.use('/telehealth', telehealthRoutes);
-router.use('/analytics', analyticsRoutes);
+// Health check endpoint
+router.get('/health', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'Health App API is running',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+  });
+});
+
+// Setup routes
+router.use('/auth', setupAuthRoutes(authController));
+
+// Protected example route
+router.get('/protected', authMiddleware, (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: 'You have accessed a protected route',
+    user: (req as any).user,
+  });
+});
 
 export default router;
