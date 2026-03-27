@@ -1,71 +1,48 @@
-import App from './app';
-import { AppDataSource } from './config/database.config';
-import logger from './utils/logger';
+import 'dotenv/config';
+import { App } from './app';
+import { initializeDatabase } from './config/database';
+import { logger } from './utils/logger';
 
-// Initialize database connection
-const initializeDatabase = async (): Promise<void> => {
-  try {
-    await AppDataSource.initialize();
-    logger.info('✅ Database connected successfully');
-  } catch (error) {
-    logger.error('❌ Database connection failed:', error);
-    process.exit(1);
-  }
-};
+const PORT = process.env.PORT || 3000;
 
-// Graceful shutdown
-const gracefulShutdown = async (signal: string): Promise<void> => {
-  logger.info(`\n${signal} received. Starting graceful shutdown...`);
-  
+async function bootstrap(): Promise<void> {
   try {
-    // Close database connections
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
-      logger.info('Database connections closed');
-    }
+    // Initialize database connection
+    await initializeDatabase();
     
-    logger.info('Graceful shutdown completed');
-    process.exit(0);
+    // Create and start the application
+    const app = new App();
+    app.listen(PORT);
+    
+    logger.info(`🚀 Health App API server started on port ${PORT}`);
+    logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
   } catch (error) {
-    logger.error('Error during graceful shutdown:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
-};
+}
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error: Error) => {
+process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', error);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
-process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-  logger.error('Unhandled Rejection at:', { promise, reason });
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
   process.exit(1);
 });
 
-// Handle shutdown signals
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received. Shutting down gracefully...');
+  process.exit(0);
+});
 
-// Start application
-const startApplication = async (): Promise<void> => {
-  try {
-    // Initialize database
-    await initializeDatabase();
-    
-    // Create and start app
-    const app = new App();
-    app.listen();
-    
-    logger.info('🚀 Health App API server started successfully');
-  } catch (error) {
-    logger.error('Failed to start application:', error);
-    process.exit(1);
-  }
-};
+process.on('SIGINT', () => {
+  logger.info('SIGINT received. Shutting down gracefully...');
+  process.exit(0);
+});
 
-// Start the application
-startApplication();
-
-export default startApplication;
+bootstrap();
